@@ -17,28 +17,82 @@ The WIKC method is general, and could be used in other finite element simulation
 The functionality can be extended for other functions given that the warping function can be computed at each continuum node.
 - See reference [1] at the end for the theory of the coupling method, and some applications.
 
+## Updates in this fork
+
+This fork extends the geometric imperfection capabilities of the original [WIKC repository](https://github.com/ahartloper/WIKC) by Alex Hartloper. The original WIKC coupling formulation and `wikc_subroutine.for` are retained. The main additions are:
+
+- **Independent web and flange imperfection amplitudes**, controlled by `local_scale_web` and `local_scale_flange`. Set `couple_local=False` to prescribe them independently; the default `True` retains the original amplitude relationship.
+- **In-plane and out-of-plane member out-of-straightness**, controlled by `straight_scale_ip` and `straight_scale_op`.
+- **In-plane and out-of-plane member out-of-plumbness**, controlled by `plumb_scale_ip` and `plumb_scale_op`.
+- **Half-model support** through `is_half_model`, using the corresponding full-member length for imperfection generation without modifying the stored mesh length.
+- **Finite-thickness web-node identification for solid meshes**, enabled by `local_node_mode=solid`. The default `legacy` mode retains the original node-classification rule.
+- **Updated input handling and examples**: explicit Boolean parsing, parameter validation, improved handling of blank lines and definition-file endings, and beam-node coordinate transformations based on the actual Abaqus `*System` definitions. The DBBW example is updated, and a W14X159 solid–beam example is added.
+
+The original local imperfection shape functions, initial twisting imperfection, and reduced beam section (RBS) options are retained. The legacy `local_scale` and `straight_scale` inputs remain supported.
+
+### Imperfection parameters
+
+Specify these options on the `*Imperfection` line in the **component definition file**, not on the Abaqus `*IMPERFECTION` keyword. All options must be on the same physical line.
+
+Here, `d` is the total section depth, `bf` is the flange width, and `L` is the length used to generate the member imperfection. For a full model, `L` is the component length; for a half model, `L` is twice the modeled length. Lengths and displacements use the same consistent units as the input model.
+
+| Parameter | Meaning | Default or fallback |
+|---|---|---|
+| `num_of_waves` | Local longitudinal shape selection: 1 or 2 | Required |
+| `wave_length_factor` | Local imperfection extent divided by `d` | Required; positive |
+| `local_scale_web` | Multiplier of the web reference amplitude `d/300` | `local_scale`, or 1 |
+| `local_scale_flange` | Multiplier of the flange reference amplitude `bf/250` | `local_scale`, or 1 |
+| `couple_local` | Apply the original web–flange amplitude relationship | `True` |
+| `straight_scale_op` | Multiplier of the out-of-plane out-of-straightness amplitude `L/1500` | `straight_scale`, or 1 |
+| `straight_scale_ip` | Multiplier of the in-plane out-of-straightness amplitude `L/1500` | 0 |
+| `plumb_scale_op` | Multiplier of the out-of-plane out-of-plumbness end displacement `L/1000` | 0 |
+| `plumb_scale_ip` | Multiplier of the in-plane out-of-plumbness end displacement `L/1000` | 0 |
+| `twist_scale` | Multiplier of the original reference twist angle, 0.006 rad | 1 |
+| `is_half_model` | Generate the first half of the full-member imperfection field | `False` |
+| `local_node_mode` | `legacy` or `solid` web-node identification | `legacy` |
+| `is_RBS` | Use the original RBS imperfection placement | `False` |
+| `RBS_offset` | Offset of the RBS imperfection from the component origin | Required when `is_RBS=True` |
+
+The `op` and `ip` labels refer to the component's **local** `n1` and `n2` directions, respectively. They do not necessarily coincide with the global X and Y axes. Generated nodal imperfection vectors are expressed in global coordinates.
+
+Explicit web/flange or directional scales override their legacy fallback inputs. Negative scales reverse the corresponding imperfection direction. With `couple_local=True`, the web and flange amplitudes are adjusted together according to the original relationship; opposite nonzero signs require `couple_local=False`.
+
+The `solid` rule identifies web nodes using the web thickness and clear web depth, rather than only checking whether the local x-coordinate is approximately zero. It is a geometric classification rule for an I-section, not a general classifier for arbitrary cross-sections or fillet geometries.
+
+Half-model generation assumes that the model extends from a physical member end at `z=0` to the full member's midspan. It does not create symmetry boundary conditions. The reference amplitudes above are implementation conventions; select scales and boundary conditions appropriate to the analysis.
+
+For example, the W14X159 definition uses independent local amplitudes and both directions of member imperfections:
+
+```text
+*Imperfection, wave_length_factor=1.5, num_of_waves=1, local_scale_web=0.5114, local_scale_flange=0.2884, straight_scale_op=0.6970, straight_scale_ip=0.5738, plumb_scale_op=1.1794, plumb_scale_ip=0.8512, twist_scale=0.8321, couple_local=False, local_node_mode=solid, is_half_model=False, is_RBS=False
+```
+
+These values illustrate the supplied example and are not general recommendations for other members. See the complete [W14X159 component definition](examples/W14X159/cl-W14X159-5000-S-03-Fx-def.txt).
+
+For scripts using component objects directly, input options remain in `component.imperfection_props`; derived amplitudes, axes, and wave lengths are stored in `component.imperfection_params`. Code that previously read derived values from `imperfection_props` should use `imperfection_params` instead.
+
 ## Installation
 
 Command-line instructions are provided to obtain and use the WIKC subroutine and the Python pre-processor.
 
-1. Clone the WIKC repository
+1. Clone this fork
 
-With `git` installed, open your command-line tool of choice (e.g., Command Prompt, Terminal, etc.) and enter:
+With `git` installed, clone this fork using its repository URL (replace `<fork-url>` below):
 ```
-git clone git@github.com:ahartloper/WIKC.git
+git clone <fork-url> WIKC
 ```
 
 2. Locate the WIKC subroutine
 
-The Abaqus MPC user subroutine for the WIKC method is contained within the file `wikc/wikc_subroutine.for`.
+The Abaqus MPC user subroutine for the WIKC method is contained within the file [`wikc_subroutine.for`](wikc_subroutine.for) at the repository root.
 
 3. Install the `pywikc` pre-processor
 
 The `pywikc` pre-processor, including the imperfection generator, is specified as a Python package.
-One way to install the package is to change the directory of your command-line tool to the `wikc` directory, and install using `pip`, e.g.:
+One way to install the package is to change the directory of your command-line tool to the repository root, and install using `pip`, e.g.:
 ```
-cd wikc
-pip install .
+cd WIKC
+python -m pip install -e .
 ```
 
 ## Usage
@@ -130,10 +184,10 @@ The use of the imperfection module requires that parts are **not** used in the m
 
 The pre-processor requires two inputs: (1) the properly defined Abaqus input file, and (2) a component definition file.
 The Abaqus input file must be "properly" defined because the pre-processor makes some assumptions regarding the part definitions.
-Instructions for the component definition file are provided in the `docs/` directory.
+Instructions for the component definition file are provided in the `doc/` directory. The extended imperfection options for this fork are listed above.
 
 The basic rules that need to be adhered to when making the Abaqus model are as follows:
-- Beam section sketches should start at the origin (0, 0) and extend in the x-axis to (L, 0).
+- Beam centerlines are defined along the beam domain's local x-axis; the reader uses its `*System` to determine the position and orientation in the component coordinate system.
 - Continuum section sketches should be centered at the origin (0, 0), the strong axis should be aligned with the x-axis, and the weak axis should be aligned with the y-axis.
 - Beam and continuum domains are defined through node sets.
 - The interface beam and continuum nodes are defined through node sets.
@@ -141,7 +195,7 @@ The basic rules that need to be adhered to when making the Abaqus model are as f
 The component definition file is a plain text file that provides information regarding: the cross-section geometry, the beam and continuum domains, couplings, and imperfections.
 Each definition file is related to an input file.
 Together, these two files are used to generate an internal representation of the model in `pywikc` that can be used to output the Abaqus keywords and imperfection files.
-See the `component_def.md` and `Example-CDef.md` files in the `docs/` directory for more information.
+See [component_def.md](doc/component_def.md) and [Example-CDef.md](doc/Example-CDef.md) for the general definition-file structure. The parameter table above documents the additional imperfection options in this fork.
 
 The `pywikc` package provides the following functions:
 ```
@@ -160,6 +214,34 @@ Another method is to copy the additions into the Keyword editor for the model in
 The keyword editor can be accessed by right-clicking on the model in Abaqus/CAE and selecting `Edit Keywords`.
 The imperfections can likewise be integrated into the model using the `*Imperfection` keyword as noted above.
 
+### Examples in this fork
+
+From the repository root, run either example with Python:
+
+```bash
+python examples/DBBW/DBBW-macro-processing.py
+python examples/W14X159/W14X159-processing.py
+```
+
+The scripts locate their inputs relative to their own location, so they can also be run from an IDE without changing its working directory. They perform preprocessing only; they do not submit an Abaqus analysis.
+
+| Example | Model | Imperfection settings |
+|---|---|---|
+| [DBBW](examples/DBBW/) | Beam elements coupled to S4R shell domains | Original RBS imperfection pattern; `couple_local=True` and `local_node_mode=legacy` |
+| [W14X159](examples/W14X159/) | B31OS beam elements coupled to C3D20R solid domains | Independent web/flange amplitudes, two-direction out-of-straightness and out-of-plumbness, and initial twist; `local_node_mode=solid` |
+
+Each example writes the following files to its own `output/` directory:
+
+- `<model>-Imp.txt`: nodal geometric imperfection displacements.
+- `MPC_Keywords.txt`: MPC, amplitude, and field-variable definitions.
+- `<model>-final.inp`: a separate input copy with an absolute reference to the imperfection file, resolved on the machine running the script.
+
+The original `.inp` is not overwritten. The final-copy helper updates an existing `*IMPERFECTION, INPUT=...` reference, or adds one before the first `*STEP` when absent. The absolute path is written without quotation marks; use a path without spaces or commas, and rerun the script after moving the files to another directory or machine.
+
+**The supplied DBBW and W14X159 input files already contain their MPC, `warp_fun_amp`, and field-variable definitions.** The scripts preserve those definitions; they do not automatically insert or synchronize `MPC_Keywords.txt` into the final input. If coupling node sets, section geometry, or coupling options are changed, update the corresponding definitions in the analysis input. Do not append the entire keyword file or duplicate definitions: MPC and amplitude definitions belong in the model data, while the generated field definitions belong in the first analysis step.
+
+The DBBW example uses the WIKC subroutine. The W14X159 example also includes `ALLcombinedSolid_CMN.for`, containing its UMAT, MPC, and UAMP routines. Use the user subroutines required by the selected model with a compatible Abaqus/Standard Fortran environment; running the Python preprocessor does not validate user-subroutine compilation or nonlinear analysis convergence.
+
 ### A note on convergence
 
 Bi-moments are the energy conjugate to warping in beam-column elements.
@@ -176,11 +258,13 @@ This could be done, for instance, by creating an extra step with the relaxed tol
 
 ## Contributing
 
-Bug fixes and contributions can be raised by opening a new issue in the WIKC repository.
+Bug reports and contributions concerning these extensions can be submitted to this fork. For the original WIKC implementation, refer to the [upstream repository](https://github.com/ahartloper/WIKC).
 
 ## Authors
 
-Code written and maintained by Alex Hartloper.
+Original WIKC implementation: **Alex Hartloper**.
+
+Geometric imperfection extensions and updated examples in this fork: **Tianyu Gu**.
 
 ## License
 

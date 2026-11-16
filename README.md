@@ -26,7 +26,7 @@ This fork extends the geometric imperfection capabilities of the original [WIKC 
 - **In-plane and out-of-plane member out-of-plumbness**, controlled by `plumb_scale_ip` and `plumb_scale_op`.
 - **Half-model support** through `is_half_model`, using the corresponding full-member length for imperfection generation without modifying the stored mesh length.
 - **Finite-thickness web-node identification for solid meshes**, enabled by `local_node_mode=solid`. The default `legacy` mode retains the original node-classification rule.
-- **Updated input handling and examples**: explicit Boolean parsing, parameter validation, improved handling of blank lines and definition-file endings, and beam-node coordinate transformations based on the actual Abaqus `*System` definitions. The DBBW example is updated, and a W14X159 solid–beam example is added.
+- **Updated input handling and examples**: explicit Boolean parsing, improved handling of blank lines and definition-file endings, and beam-node coordinate transformations based on the actual Abaqus `*System` definitions. The DBBW example is updated, and a W14X159 solid beam-column example is added.
 
 The original local imperfection shape functions, initial twisting imperfection, and reduced beam section (RBS) options are retained. The legacy `local_scale` and `straight_scale` inputs remain supported.
 

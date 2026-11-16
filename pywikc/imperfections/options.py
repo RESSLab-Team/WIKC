@@ -73,7 +73,7 @@ def normalize_imperfection_options(options):
         'local_scale': 1., 'straight_scale': 1., 'twist_scale': 1.,
         'straight_scale_ip': 0., 'plumb_scale_ip': 0., 'plumb_scale_op': 0.,
         'is_RBS': False, 'is_half_model': False, 'couple_local': True,
-        'web_identification_mode': 'solid',
+        'web_identification_mode': 'shell',
     }
     for key, value in defaults.items():
         result.setdefault(key, value)

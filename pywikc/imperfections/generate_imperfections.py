@@ -117,9 +117,9 @@ def i_local_imp(coord, props, is_top_seg):
         else:
             # Large value so that will not be considered for local imperfections
             z_mod = 1.0e8
-    # Default to finite-thickness classification; shell uses the original centerline rule.
+    # Default to 'shell' uses the original centerline rule; 'solid' refers finite-thickness classification
     x_tol = 1.e-8
-    if props.get('web_identification_mode', 'solid') == 'solid':
+    if props.get('web_identification_mode', 'shell') == 'solid':
         is_web_node = (abs(x) <= props['web_thickness'] / 2. + x_tol and
                        abs(y) <= props['web_depth'] / 2. + x_tol)
     else:

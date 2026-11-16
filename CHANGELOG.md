@@ -2,6 +2,15 @@
 
 All notable changes to WIKC are listed here, with the people who made them.
 
+## 2026-11-16 (follow-up)
+
+Integrated from [GuGuaTT/WIKC](https://github.com/GuGuaTT/WIKC). By Tianyu Gu ([@GuGuaTT](https://github.com/GuGuaTT)).
+
+### Changed
+- **Breaking:** the imperfection option `local_node_mode` (`legacy`/`solid`) is renamed `web_identification_mode` (`shell`/`solid`). Replace `local_node_mode=legacy` with `web_identification_mode=shell`, and `local_node_mode=solid` with `web_identification_mode=solid`.
+- **Default changed:** web nodes are now identified with the finite-thickness rule (`solid`) unless `web_identification_mode=shell` is given. Definition files that omit the option previously used the original centerline rule; add `web_identification_mode=shell` to keep the previous imperfection field.
+- DBBW and W14X159 examples and README updated accordingly.
+
 ## 2026-11-16
 
 Integrated from [GuGuaTT/WIKC](https://github.com/GuGuaTT/WIKC).

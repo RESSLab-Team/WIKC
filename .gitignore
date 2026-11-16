@@ -2,3 +2,7 @@
 **/output*
 .vscode/launch.json
 theory/component_theory.pdf
+
+# Python build artefacts
+__pycache__/
+*.pyc

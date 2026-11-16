@@ -1,0 +1,15 @@
+*ISection, name=section
+3.8100, 3.9600, 0.3020, 0.1890
+
+*Component, name=member, section=section
+*BeamNodes
+BEAM-ALL
+*ContinuumNodes
+SOLID-BOT-ALL, SOLID-TOP-ALL
+*Coupling, jtype=27
+BEAM-BOT, SOLID-BOT-TOP
+*Coupling, jtype=27
+BEAM-TOP, SOLID-TOP-BOT
+*Imperfection, wave_length_factor=1.5, num_of_waves=1, local_scale_web=0.5114, local_scale_flange =0.2884, straight_scale_op=0.6970, straight_scale_ip=0.5738, plumb_scale_op=1.1794, plumb_scale_ip=0.8512, twist_scale=0.8321, couple_local=False, web_identification_mode=solid, is_half_model=False, is_RBS=False
+
+*EndDef

@@ -25,7 +25,7 @@ This fork extends the geometric imperfection capabilities of the original [WIKC 
 - **In-plane and out-of-plane member out-of-straightness**, controlled by `straight_scale_ip` and `straight_scale_op`.
 - **In-plane and out-of-plane member out-of-plumbness**, controlled by `plumb_scale_ip` and `plumb_scale_op`.
 - **Half-model support** through `is_half_model`, using the corresponding full-member length for imperfection generation without modifying the stored mesh length.
-- **Finite-thickness web-node identification for solid meshes**, enabled by default with `web_identification_mode=solid`. The `shell` mode retains the original node-classification rule.
+- **Finite-thickness web-node identification for solid meshes**, enabled with `web_identification_mode=solid`. The default `shell` mode retains the original node-classification rule.
 - **Updated input handling and examples**: explicit Boolean parsing, improved handling of blank lines and definition-file endings, and beam-node coordinate transformations based on the actual Abaqus `*System` definitions. The DBBW example is updated, and a W14X159 solid beam-column example is added.
 
 The original local imperfection shape functions, initial twisting imperfection, and reduced beam section (RBS) options are retained. The legacy `local_scale` and `straight_scale` inputs remain supported.
@@ -49,7 +49,7 @@ Here, `d` is the total section depth, `bf` is the flange width, and `L` is the l
 | `plumb_scale_ip` | Multiplier of the in-plane out-of-plumbness end displacement `L/1000` | 0 |
 | `twist_scale` | Multiplier of the original reference twist angle, 0.006 rad | 1 |
 | `is_half_model` | Generate the first half of the full-member imperfection field | `False` |
-| `web_identification_mode` | `shell` or `solid` web-node identification | `solid` |
+| `web_identification_mode` | `shell` or `solid` web-node identification | `shell` |
 | `is_RBS` | Use the original RBS imperfection placement | `False` |
 | `RBS_offset` | Offset of the RBS imperfection from the component origin | Required when `is_RBS=True` |
 

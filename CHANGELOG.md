@@ -8,7 +8,7 @@ Integrated from [GuGuaTT/WIKC](https://github.com/GuGuaTT/WIKC). By Tianyu Gu ([
 
 ### Changed
 - **Breaking:** the imperfection option `local_node_mode` (`legacy`/`solid`) is renamed `web_identification_mode` (`shell`/`solid`). Replace `local_node_mode=legacy` with `web_identification_mode=shell`, and `local_node_mode=solid` with `web_identification_mode=solid`.
-- **Default changed:** web nodes are now identified with the finite-thickness rule (`solid`) unless `web_identification_mode=shell` is given. Definition files that omit the option previously used the original centerline rule; add `web_identification_mode=shell` to keep the previous imperfection field.
+- Finite-thickness web-node identification is available with `web_identification_mode=solid`. The default remains the original centerline rule (`shell`), so definition files that omit the option give the same imperfection field as before.
 - DBBW and W14X159 examples and README updated accordingly.
 
 ## 2026-11-16

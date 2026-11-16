@@ -25,7 +25,7 @@ This fork extends the geometric imperfection capabilities of the original [WIKC 
 - **In-plane and out-of-plane member out-of-straightness**, controlled by `straight_scale_ip` and `straight_scale_op`.
 - **In-plane and out-of-plane member out-of-plumbness**, controlled by `plumb_scale_ip` and `plumb_scale_op`.
 - **Half-model support** through `is_half_model`, using the corresponding full-member length for imperfection generation without modifying the stored mesh length.
-- **Finite-thickness web-node identification for solid meshes**, enabled by `local_node_mode=solid`. The default `legacy` mode retains the original node-classification rule.
+- **Finite-thickness web-node identification for solid meshes**, enabled by default with `web_identification_mode=solid`. The `shell` mode retains the original node-classification rule.
 - **Updated input handling and examples**: explicit Boolean parsing, improved handling of blank lines and definition-file endings, and beam-node coordinate transformations based on the actual Abaqus `*System` definitions. The DBBW example is updated, and a W14X159 solid beam-column example is added.
 
 The original local imperfection shape functions, initial twisting imperfection, and reduced beam section (RBS) options are retained. The legacy `local_scale` and `straight_scale` inputs remain supported.
@@ -49,7 +49,7 @@ Here, `d` is the total section depth, `bf` is the flange width, and `L` is the l
 | `plumb_scale_ip` | Multiplier of the in-plane out-of-plumbness end displacement `L/1000` | 0 |
 | `twist_scale` | Multiplier of the original reference twist angle, 0.006 rad | 1 |
 | `is_half_model` | Generate the first half of the full-member imperfection field | `False` |
-| `local_node_mode` | `legacy` or `solid` web-node identification | `legacy` |
+| `web_identification_mode` | `shell` or `solid` web-node identification | `solid` |
 | `is_RBS` | Use the original RBS imperfection placement | `False` |
 | `RBS_offset` | Offset of the RBS imperfection from the component origin | Required when `is_RBS=True` |
 
@@ -57,14 +57,16 @@ The `op` and `ip` labels refer to the component's **local** `n1` and `n2` direct
 
 Explicit web/flange or directional scales override their legacy fallback inputs. Negative scales reverse the corresponding imperfection direction. With `couple_local=True`, the web and flange amplitudes are adjusted together according to the original relationship; opposite nonzero signs require `couple_local=False`.
 
-The `solid` rule identifies web nodes using the web thickness and clear web depth, rather than only checking whether the local x-coordinate is approximately zero. It is a geometric classification rule for an I-section, not a general classifier for arbitrary cross-sections or fillet geometries.
+The `web_identification_mode` option controls how web nodes are identified. The default `solid` mode uses the web thickness and clear web depth, whereas the `shell` mode (formerly `legacy`) checks only whether the local x-coordinate is approximately zero. This option controls node identification and does not select or detect the continuum element type. It is a geometric classification rule for an I-section, not a general classifier for arbitrary cross-sections or fillet geometries.
+
+In existing inputs, replace `local_node_mode=legacy` with `web_identification_mode=shell`, and `local_node_mode=solid` with `web_identification_mode=solid`. If the old option was omitted, specify `web_identification_mode=shell` to retain the previous default behavior.
 
 Half-model generation assumes that the model extends from a physical member end at `z=0` to the full member's midspan. It does not create symmetry boundary conditions. The reference amplitudes above are implementation conventions; select scales and boundary conditions appropriate to the analysis.
 
 For example, the W14X159 definition uses independent local amplitudes and both directions of member imperfections:
 
 ```text
-*Imperfection, wave_length_factor=1.5, num_of_waves=1, local_scale_web=0.5114, local_scale_flange=0.2884, straight_scale_op=0.6970, straight_scale_ip=0.5738, plumb_scale_op=1.1794, plumb_scale_ip=0.8512, twist_scale=0.8321, couple_local=False, local_node_mode=solid, is_half_model=False, is_RBS=False
+*Imperfection, wave_length_factor=1.5, num_of_waves=1, local_scale_web=0.5114, local_scale_flange=0.2884, straight_scale_op=0.6970, straight_scale_ip=0.5738, plumb_scale_op=1.1794, plumb_scale_ip=0.8512, twist_scale=0.8321, couple_local=False, web_identification_mode=solid, is_half_model=False, is_RBS=False
 ```
 
 These values illustrate the supplied example and are not general recommendations for other members. See the complete [W14X159 component definition](examples/W14X159/cl-W14X159-5000-S-03-Fx-def.txt).
@@ -227,8 +229,8 @@ The scripts locate their inputs relative to their own location, so they can also
 
 | Example | Model | Imperfection settings |
 |---|---|---|
-| [DBBW](examples/DBBW/) | Beam elements coupled to S4R shell domains | Original RBS imperfection pattern; `couple_local=True` and `local_node_mode=legacy` |
-| [W14X159](examples/W14X159/) | B31OS beam elements coupled to C3D20R solid domains | Independent web/flange amplitudes, two-direction out-of-straightness and out-of-plumbness, and initial twist; `local_node_mode=solid` |
+| [DBBW](examples/DBBW/) | Beam elements coupled to S4R shell domains | Original RBS imperfection pattern; `couple_local=True` and `web_identification_mode=shell` |
+| [W14X159](examples/W14X159/) | B31OS beam elements coupled to C3D20R solid domains | Independent web/flange amplitudes, two-direction out-of-straightness and out-of-plumbness, and initial twist; `web_identification_mode=solid` |
 
 Each example writes the following files to its own `output/` directory:
 

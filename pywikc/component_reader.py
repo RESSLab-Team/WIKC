@@ -1,6 +1,7 @@
 import numpy as np
 from .coupling import BSCoupling
 from .component import IComponent, ISection, CoordSys, ICoupling
+from .imperfections.options import parse_imperfection_options
 
 # definition file prototype:
 # *coupling
@@ -63,9 +64,15 @@ class AbaqusInpToComponentReader:
         for c in self.components:
             for node_set in c.beam_node_sets:
                 for node_id in self.beam_sets[node_set]:
-                    local_coords = self.all_nodes_local[node_id]
-                    o_val = c.coord_sys_offsets[self.node_systems[node_id]]
-                    c.beam_nodes[node_id] = local_coords + np.array([0., 0., o_val])
+                    # Use the actual *System orientation rather than assuming
+                    # every beam's local x axis points along component +z.
+                    node_system = self.cs_transforms[self.node_systems[node_id]]
+                    component_basis = self.cs_transforms[c.orientation_id]['basis']
+                    component_origin = self.cs_transforms[c.base_cys_id]['origin']
+                    global_coords = (node_system['origin'] +
+                                     np.dot(node_system['basis'], self.all_nodes[node_id]))
+                    c.beam_nodes[node_id] = np.dot(
+                        component_basis.T, global_coords - component_origin).round(8)
             for node_set in c.continuum_node_sets:
                 for node_id in self.continuum_sets[node_set]:
                     local_coords = self.all_nodes_local[node_id]
@@ -112,11 +119,14 @@ class AbaqusInpToComponentReader:
                     options[opt] = opt_val
             return options
 
-        def handle_empty(file, peeked_line):
-            """ Handle empty lines while reading file. """
-            while peeked_line == '':
-                line = file.readline()
-                peeked_line = peek_line(file).strip()
+        def read_set_names(file):
+            """Read names until the next keyword or EOF; skip blank lines."""
+            names = []
+            while True:
+                next_line = peek_line(file)
+                if not next_line or next_line.lstrip().startswith('*'):
+                    return names
+                names.extend(name for name in line_lister(file.readline()) if name)
 
         with open(def_file, 'r') as file:
             line = file.readline()
@@ -136,26 +146,16 @@ class AbaqusInpToComponentReader:
                     self.components.append(new_component)
 
                 elif l_list[0] == '*BeamNodes':
-                    peeked_line = 'START'
-                    while peeked_line[0] != '*':
-                        line = file.readline()
-                        l_list = [l.strip() for l in line.split(',')]
-                        self.components[-1].beam_node_sets += l_list
-                        for li in l_list:
-                            self.beam_sets[li] = []
-                        peeked_line = peek_line(file).strip()
-                        handle_empty(file, peeked_line)
+                    names = read_set_names(file)
+                    self.components[-1].beam_node_sets += names
+                    for name in names:
+                        self.beam_sets[name] = []
 
                 elif l_list[0] == '*ContinuumNodes':
-                    peeked_line = 'START'
-                    while peeked_line[0] != '*':
-                        line = file.readline()
-                        l_list = [l.strip() for l in line.split(',')]
-                        self.components[-1].continuum_node_sets += l_list
-                        for li in l_list:
-                            self.continuum_sets[li] = []
-                        peeked_line = peek_line(file).strip()
-                        handle_empty(file, peeked_line)
+                    names = read_set_names(file)
+                    self.components[-1].continuum_node_sets += names
+                    for name in names:
+                        self.continuum_sets[name] = []
 
                 elif l_list[0] == '*Coupling':
                     couple_options = opt_extract(l_list)
@@ -168,19 +168,8 @@ class AbaqusInpToComponentReader:
                     self.components[-1].couplings_info.append(couple_data)
 
                 elif l_list[0] == '*Imperfection':
-                    imp_opts = dict()
-                    if len(l_list) > 1:
-                        for li in l_list[1:]:
-                            li2 = li.split('=')
-                            if li2[0].strip() == 'num_of_waves':
-                                imp_opts[li2[0].strip()] = int(li2[1])
-                            elif li2[0].strip() == 'is_RBS':
-                                imp_opts[li2[0].strip()] = bool(li2[1])
-                            else:
-                                imp_opts[li2[0].strip()] = float(li2[1])
-                    self.components[-1].imperfection_props = imp_opts
+                    self.components[-1].imperfection_props = parse_imperfection_options(l_list[1:])
                     self.components[-1]._check_imperfection_props()
-                    handle_empty(file, peeked_line)
 
                 line = file.readline()
         return
@@ -223,8 +212,11 @@ class AbaqusInpToComponentReader:
             file.seek(0)
             line = file.readline()
             while line:
+                if not line.strip():
+                    line = file.readline()
+                    continue
                 l_list = [li.strip() for li in line.split(',')]
-                if l_list[0][0] == '*':
+                if l_list[0].startswith('*'):
                     # Stop at any keyword
                     node_reading = False
                     if system_reading:

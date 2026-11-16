@@ -1,4 +1,5 @@
 import numpy as np
+from .imperfections.options import normalize_imperfection_options
 
 
 class ICoupling:
@@ -94,8 +95,9 @@ class IComponent:
 
         # Container for imperfections
         self.node_imperfections = dict()
-        # Defines the imperfection properties
+        # User inputs are kept separate from derived wave parameters.
         self.imperfection_props = dict()
+        self.imperfection_params = None
 
     def _compute_length(self):
         """ Computes the length of the component from the beam and continuum node coordinates. """
@@ -109,13 +111,8 @@ class IComponent:
         self.length = max_z
 
     def _check_imperfection_props(self):
-        """ Checks if all the scales are defined in the imperfection props. """
-        if 'local_scale' not in self.imperfection_props:
-            self.imperfection_props['local_scale'] = 1.
-        if 'straight_scale' not in self.imperfection_props:
-            self.imperfection_props['straight_scale'] = 1.
-        if 'twist_scale' not in self.imperfection_props:
-            self.imperfection_props['twist_scale'] = 1.
+        """Return validated defaults without replacing the original inputs."""
+        return normalize_imperfection_options(self.imperfection_props)
 
     def get_imperfect_nodes(self):
         """ Returns the node coordinates with the imperfection. """

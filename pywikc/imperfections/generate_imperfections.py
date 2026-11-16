@@ -47,7 +47,7 @@ def set_imperfection_properties(component):
         'flange_width': section.bf,
         'web_depth': section.d - 2. * section.tf,
         'web_thickness': section.tw,
-        'local_node_mode': options['local_node_mode'],
+        'web_identification_mode': options['web_identification_mode'],
         'epsilon': 0.2,
         'is_RBS': options['is_RBS'],
         'delta_web': web_amp,
@@ -117,10 +117,9 @@ def i_local_imp(coord, props, is_top_seg):
         else:
             # Large value so that will not be considered for local imperfections
             z_mod = 1.0e8
-    # Opt in to the finite-thickness classification used in pywikc_m.
-    # Keep the legacy rule by default to preserve existing meshes/results.
+    # Default to finite-thickness classification; shell uses the original centerline rule.
     x_tol = 1.e-8
-    if props.get('local_node_mode', 'legacy') == 'solid':
+    if props.get('web_identification_mode', 'solid') == 'solid':
         is_web_node = (abs(x) <= props['web_thickness'] / 2. + x_tol and
                        abs(y) <= props['web_depth'] / 2. + x_tol)
     else:

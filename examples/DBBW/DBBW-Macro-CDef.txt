@@ -1,5 +1,5 @@
 ** Current pywikc_clean example. Dimensions and lengths are in mm.
-** This model uses S4R shells: keep local_node_mode=legacy.
+** This model uses S4R shells: keep web_identification_mode=shell.
 ** couple_local=True retains the original local amplitude relation.
 ** New global modes are explicit but disabled to reproduce the old test.
 
@@ -19,7 +19,7 @@ column-1_all_nodes
 column-beam_dom-3_bot_node, column-1_top_interf
 *Coupling, jtype=27
 column-beam_dom-1_top_node, column-1_bot_interf
-*Imperfection, wave_length_factor=1., num_of_waves=1, local_scale_web=0., local_scale_flange=0., couple_local=True, straight_scale_op=0., straight_scale_ip=0., plumb_scale_op=0., plumb_scale_ip=0., twist_scale=0., is_half_model=False, local_node_mode=legacy, is_RBS=False
+*Imperfection, wave_length_factor=1., num_of_waves=1, local_scale_web=0., local_scale_flange=0., couple_local=True, straight_scale_op=0., straight_scale_ip=0., plumb_scale_op=0., plumb_scale_ip=0., twist_scale=0., is_half_model=False, web_identification_mode=shell, is_RBS=False
 
 *Component, name=beam-1, section=w36x150
 *BeamNodes
@@ -28,7 +28,7 @@ beam-beam_dom-2_all_nodes
 beam-1_all_nodes
 *Coupling, jtype=27
 beam-beam_dom-2_interf_node, beam-1_beam_couple_interf
-*Imperfection, wave_length_factor=0.752, num_of_waves=1, is_RBS=True, RBS_offset=228.6, local_scale_web=1., local_scale_flange=1., couple_local=True, straight_scale_op=0., straight_scale_ip=0., plumb_scale_op=0., plumb_scale_ip=0., twist_scale=0., is_half_model=False, local_node_mode=legacy
+*Imperfection, wave_length_factor=0.752, num_of_waves=1, is_RBS=True, RBS_offset=228.6, local_scale_web=1., local_scale_flange=1., couple_local=True, straight_scale_op=0., straight_scale_ip=0., plumb_scale_op=0., plumb_scale_ip=0., twist_scale=0., is_half_model=False, web_identification_mode=shell
 
 
 *Component, name=beam-2, section=w36x150
@@ -38,6 +38,6 @@ beam-beam_dom-1_all_nodes
 beam-2_all_nodes
 *Coupling, jtype=27
 beam-beam_dom-1_interf_node, beam-2_beam_couple_interf
-*Imperfection, wave_length_factor=0.752, num_of_waves=1, is_RBS=True, RBS_offset=228.6, local_scale_web=-1., local_scale_flange=-1., couple_local=True, straight_scale_op=0., straight_scale_ip=0., plumb_scale_op=0., plumb_scale_ip=0., twist_scale=0., is_half_model=False, local_node_mode=legacy
+*Imperfection, wave_length_factor=0.752, num_of_waves=1, is_RBS=True, RBS_offset=228.6, local_scale_web=-1., local_scale_flange=-1., couple_local=True, straight_scale_op=0., straight_scale_ip=0., plumb_scale_op=0., plumb_scale_ip=0., twist_scale=0., is_half_model=False, web_identification_mode=shell
 
 *EndDef

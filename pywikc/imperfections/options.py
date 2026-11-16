@@ -10,7 +10,7 @@ _SCALES = (
 )
 _BOOLEANS = ('is_RBS', 'is_half_model', 'couple_local')
 _NUMBERS = _SCALES + ('wave_length_factor', 'RBS_offset')
-_KNOWN = set(_NUMBERS + _BOOLEANS + ('num_of_waves', 'local_node_mode'))
+_KNOWN = set(_NUMBERS + _BOOLEANS + ('num_of_waves', 'web_identification_mode'))
 
 
 def parse_bool(value):
@@ -43,7 +43,7 @@ def parse_imperfection_options(items):
             options[key] = parse_bool(value)
         elif key == 'num_of_waves':
             options[key] = int(value)
-        elif key == 'local_node_mode':
+        elif key == 'web_identification_mode':
             options[key] = value.lower()
         else:
             options[key] = float(value)
@@ -55,7 +55,7 @@ def normalize_imperfection_options(options):
 
     Explicit per-direction/per-plate scales override the legacy scales.
     couple_local=True retains the original web/flange amplitude relation.
-    local_node_mode='solid' opts into finite-thickness web classification.
+    web_identification_mode='solid' uses finite-thickness web classification by default.
     """
     unknown = set(options) - _KNOWN
     if unknown:
@@ -73,7 +73,7 @@ def normalize_imperfection_options(options):
         'local_scale': 1., 'straight_scale': 1., 'twist_scale': 1.,
         'straight_scale_ip': 0., 'plumb_scale_ip': 0., 'plumb_scale_op': 0.,
         'is_RBS': False, 'is_half_model': False, 'couple_local': True,
-        'local_node_mode': 'legacy',
+        'web_identification_mode': 'solid',
     }
     for key, value in defaults.items():
         result.setdefault(key, value)
@@ -89,8 +89,8 @@ def normalize_imperfection_options(options):
                 raise ValueError('{} must be finite'.format(key))
     if result['wave_length_factor'] <= 0.:
         raise ValueError('wave_length_factor must be positive')
-    if result['local_node_mode'] not in ('legacy', 'solid'):
-        raise ValueError("local_node_mode must be 'legacy' or 'solid'")
+    if result['web_identification_mode'] not in ('shell', 'solid'):
+        raise ValueError("web_identification_mode must be 'shell' or 'solid'")
     if result['is_RBS'] and 'RBS_offset' not in result:
         raise ValueError('RBS_offset is required when is_RBS=True')
     if 'RBS_offset' in result and result['RBS_offset'] < 0.:
